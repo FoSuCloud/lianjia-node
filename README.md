@@ -1,3 +1,7 @@
+## 提交代码
+1. git add . 
+2. git commit -m "修改"
+3. git push
 
 ## 创建项目
 1. npm init 创建项目
