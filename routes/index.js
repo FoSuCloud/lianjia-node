@@ -97,23 +97,45 @@ router.get("/house/type", async function(req, res, next) {
     });
 });
 
+router.get('/city/zone', async function(req,res,next){
+    let city = req.query.city;
+    let model = getModel(city);
+    const arr = await model.find({}, "_id dist");
+    let distList = [];
+    for(let i=0;i<arr.length;i++){
+        let index = -1;
+        distList.some((item, j) => {
+            if (item.name === arr[i]["dist"]) {
+                index = j;
+                return true;
+            }
+            return false;
+        })
+        if (index > -1) {
+            distList[index].num++
+        } else if (arr[i]["dist"]) {
+            distList.push({
+                name: arr[i]["dist"],
+                num: 1
+            });
+        }
+    }
+
+    distList = distList.map((item) => {
+        if (item.name.indexOf('区') === -1) {
+            item.name = item.name + '区'
+        }
+        return {
+            value:item.num,
+            name: item.name
+        };
+    });
+    res.json({ code: 0, data: distList, msg: "成功" });
+})
+
 router.get("/city/heat", async function(req, res, next) {
     let city = req.query.city;
-    let model;
-    switch (city) {
-        case "sz":
-            model = shenzhen;
-            break;
-        case "sh":
-            model = shanghai;
-            break;
-        case "bj":
-            model = beijing;
-            break;
-        case "gz":
-            model = guangzhou;
-            break;
-    }
+    let model = getModel(city);
     const arr = await model.find({}, "_id rent_area rent_price_listing dist");
     let distList = [];
     for (let i = 0; i < arr.length; i++) {
@@ -149,5 +171,139 @@ router.get("/city/heat", async function(req, res, next) {
     });
     res.json({ code: 0, data: distList, msg: "成功" });
 });
+
+router.get('/city/num-price', async function(req,res,next){
+    let city = req.query.city;
+    let model = getModel(city);
+    const arr = await model.find({}, "_id rent_area rent_price_listing dist");
+    let distList = [];
+    for (let i = 0; i < arr.length; i++) {
+        let index = -1;
+        distList.some((item, j) => {
+            if (item.name === arr[i]["dist"]) {
+                index = j;
+                return true;
+            }
+            return false;
+        })
+        let price = parseInt(arr[i]["rent_price_listing"])
+        let area = parseInt(arr[i]["rent_area"])
+        if (index > -1) {
+            distList[index].price += price
+            distList[index].area += area
+            distList[index].num++;
+        } else if (arr[i]["dist"]) {
+            distList.push({
+                name: arr[i]["dist"],
+                price: price,
+                area: area,
+                num: 1
+            });
+        }
+    }
+    distList = distList.map((item) => {
+        if (item.name.indexOf('区') === -1) {
+            item.name = item.name + '区'
+        }
+        return {
+            value: Math.round(item.price / item.area),
+            num: item.num,
+            name: item.name
+        };
+    });
+    res.json({ code: 0, data: distList, msg: "成功" });
+})
+
+router.get('/city/style-price', async function(req,res,next){
+    let city = req.query.city;
+    let model = getModel(city);
+    const arr = await model.find({}, "_id layout rent_area rent_price_listing");
+    let distList = [];
+    let maxList=['2室1厅1卫','1室1厅1卫','3室2厅1卫','2室2厅1卫']
+    for (let i = 0; i < arr.length; i++) {
+        let index = -1;
+        distList.some((item, j) => {
+            if (item.layout === arr[i]["layout"]) {
+                index = j;
+                return true;
+            }
+            return false;
+        })
+        let price = parseInt(arr[i]["rent_price_listing"])
+        let area = parseInt(arr[i]["rent_area"])
+        if (index > -1) {
+            distList[index].price += price
+            distList[index].area += area
+            distList[index].num++;
+        } else if (arr[i]["layout"]&&maxList.indexOf(arr[i]["layout"])>-1) {
+            distList.push({
+                layout: arr[i]["layout"],
+                price: price,
+                area: area,
+                 num: 1
+            });
+        }
+    }
+    distList = distList.map((item) => {
+        return {
+            value: Math.round(item.price / item.area),
+            layout: item.layout,
+            num:item.num
+        };
+    });
+    res.json({ code: 0, data: distList, msg: "成功" });
+})
+
+
+router.get('/city/word-cloud',async function(req,res,next){
+    let city = req.query.city;
+    let model = getModel(city);
+    const arr = await model.find({}, "_id house_tag");
+    let resList = [];
+    for(let i=0;i<arr.length;i++){
+        if(!arr[i]["house_tag"]){
+            continue;
+        }
+        let tags=arr[i]["house_tag"].split(' ');
+        for(let j=0;j<tags.length;j++){
+            let index=-1;
+            resList.some((item,k)=> {
+                if(item.name===tags[j]){
+                    index = k;
+                    return true;
+                }
+                return false
+            });
+            if (index > -1) {
+                resList[index].value++
+            } else if (tags[j]) {
+                resList.push({
+                    name: tags[j],
+                    value: 1
+                });
+            }
+        }
+    }
+    res.json({ code: 0, data: resList, msg: "成功" });
+})
+
+function getModel(city){
+    let model;
+    switch (city) {
+        case "sz":
+            model = shenzhen;
+            break;
+        case "sh":
+            model = shanghai;
+            break;
+        case "bj":
+            model = beijing;
+            break;
+        case "gz":
+            model = guangzhou;
+            break;
+    }
+    return model
+}
 
 module.exports = router;
