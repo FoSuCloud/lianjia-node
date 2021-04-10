@@ -3,7 +3,8 @@ const mongodb = require("./index.js");
 const user = new mongodb.Schema({
     username: String,
     email: String,
-    password: String
+    password: String,
+    role: Number
 });
 
 user.statics.findAll = function(callback) {

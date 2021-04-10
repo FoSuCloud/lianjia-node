@@ -287,6 +287,61 @@ router.get('/city/word-cloud',async function(req,res,next){
     res.json({ code: 0, data: resList, msg: "成功" });
 })
 
+/**
+ * 获取预测房价
+ * */
+router.get('/calculate', async function(req,res,next){
+    const city=req.query.city
+    const zone = req.query.zone
+    let area = req.query.area
+    const model = req.query.model
+    if(!area){
+        area = 20;
+    }
+    let price=getCityNum(city)*getZoneNum(zone)*area*getModelNum(model);
+    res.json({
+        code:0,
+        data: {
+            price:price
+        },
+        msg:'预测成功'
+    })
+})
+/**
+ * 常量，用来记录房价系数
+ * */
+function getCityNum(city){
+    let res = 1;
+    switch (city){
+        case 'sz':
+            res=3;
+            break;
+        case 'sh':
+            res=2.8;
+            break;
+        case 'bj':
+            res=3.2;
+            break;
+        case 'gz':
+            res=2.5;
+            break;
+        default:
+            break;
+    }
+    return res
+}
+function getZoneNum(zone){
+    if(!zone){
+        return 20
+    }
+    return Math.max(20,Math.min(zone,40))
+}
+function getModelNum(model){
+    if(!model){
+        return 1
+    }
+    return Math.max(1, Math.min(model*Math.random(),1.5))
+}
 function getModel(city){
     let model;
     switch (city) {

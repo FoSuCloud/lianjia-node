@@ -12,7 +12,8 @@ router.get('/add', async function(req, res, next) {
     let username = req.query.username;
     let email = req.query.email;
     let password = req.query.password;
-    let data =await user.findOne({username,email,password})
+    let role = req.query.role;
+    let data =await user.findOne({username,email,password,role})
     if(data){
         res.json({
             code: 1,
@@ -20,7 +21,7 @@ router.get('/add', async function(req, res, next) {
             msg:'用户已存在'
         })
     }
-    await user.insertMany([{username,email,password}])
+    await user.insertMany([{username,email,password,role}])
     res.json({
         code: 0,
         data:{},
@@ -31,10 +32,10 @@ router.get('/add', async function(req, res, next) {
 router.get('/login', async function(req, res, next) {
     let email = req.query.email;
     let password = req.query.password;
-    let data =await user.findOne({email,password})
+    let data =await user.findOne({email,password}, '_id role')
     res.json({
             code: data?0:1,
-            data:{},
+            data:{role:data&&data.role || 1},
             msg:data?'登陆成功':'用户不存在'
     })
 });
