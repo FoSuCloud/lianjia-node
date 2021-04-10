@@ -3,10 +3,12 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+// const expressJwt = require('express-jwt')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var shenzhenRouter = require('./routes/shenzhen');
+const token = require("./util/jwt");
 
 
 var app = express();
@@ -17,6 +19,27 @@ app.all('*', function(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Content-Length,Accept");
     next();
 });
+
+// jwt
+app.use((req,res,next)=>{
+    const path = ['/user/login', '/user/add']
+    if(path.some((item)=>{
+        return req.url.match(new RegExp(item))
+    })){
+        next()
+        return;
+    }
+    if(!req.headers.cookie){
+        res.status(401).send('认证无效，请重新登录。');
+    }
+    let reqToken = req.headers.cookie.split('token=')[1]
+    if(token.decrypt(reqToken)){
+        next()
+    }else{
+        res.status(401).send('认证无效，请重新登录。');
+    }
+})
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');

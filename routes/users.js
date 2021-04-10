@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 const user = require("../models/user");
 const pagination = require("mongoose-sex-page");
-
+const token = require('../util/jwt.js')
 /* GET users listing. */
 router.get('/', function(req, res, next) {
     res.send('users 根节点');
@@ -24,7 +24,7 @@ router.get('/add', async function(req, res, next) {
     await user.insertMany([{username,email,password,role}])
     res.json({
         code: 0,
-        data:{},
+        data:{token: token.encrypt( {data:email })},
         msg:'注册成功'
     })
 });
@@ -33,10 +33,15 @@ router.get('/login', async function(req, res, next) {
     let email = req.query.email;
     let password = req.query.password;
     let data =await user.findOne({email,password}, '_id role')
+    let params={}
+    if(data){
+        params.role = data.role || 1
+        params.token = token.encrypt( {data:email })
+    }
     res.json({
-            code: data?0:1,
-            data:{role:data&&data.role || 1},
-            msg:data?'登陆成功':'用户不存在'
+        code: data?0:1,
+        data: params,
+        msg:data?'登陆成功':'用户不存在'
     })
 });
 
