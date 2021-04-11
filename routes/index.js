@@ -15,6 +15,7 @@ router.get("/list", async function(req, res, next) {
     let city = req.query.city;
     let page = req.query.page;
     let size = req.query.size;
+    let order = req.query.order;
     let model;
     switch (city) {
         case "sz":
@@ -34,13 +35,21 @@ router.get("/list", async function(req, res, next) {
             city = "广州";
             break;
     }
-    let data = await pagination(model)
-        .page(page || 1)
-        .size(size || 20)
-        .display(5)
-        .find({ city: city })
-        .exec();
-    res.json({ code: 0, data: data, msg: "成功" });
+    let data = await model.find({ city: city })
+    let total = data.length;
+    if(order){
+        data = data.sort((a,b)=>{
+            if(order === 'ascending'){
+                return parseInt(a.rent_price_listing)-parseInt(b.rent_price_listing)
+            }else if(order === 'descending'){
+                return parseInt(b.rent_price_listing)-parseInt(a.rent_price_listing)
+            }
+        })
+    }
+    let start = (page-1)*size;
+    let end = page*size;
+    data= data.slice(start,end)
+    res.json({ code: 0, data: {list:data,total:total}, msg: "成功" });
 });
 
 router.get("/rent", async function(req, res, next) {
@@ -48,17 +57,18 @@ router.get("/rent", async function(req, res, next) {
     let nameList = ["深圳", "广州", "北京", "上海"];
     let modelList = [shenzhen, guangzhou, beijing, shanghai];
     for (let i = 0; i < modelList.length; i++) {
-        let numArr = await modelList[i].find({}, "_id rent_price_listing");
-        let num = 0; // 总数
-        let valid = 0; // 有效数
+        let numArr = await modelList[i].find({}, "_id rent_area rent_price_listing");
+        let num = 0; // 价格总数
+        let outArea = 0 ; // 面积
         for (let j = 0; j < numArr.length; j++) {
             const price = parseInt(numArr[j]["rent_price_listing"]);
+            const area = parseInt(numArr[j]["rent_area"]);
             if (price) {
-                valid++;
-                num += price;
+                outArea += parseInt(area);
+                num += parseInt(price);
             }
         }
-        arr.push(Math.round(num / valid));
+        arr.push(parseInt(num / outArea))
     }
     res.json({
         code: 0,
