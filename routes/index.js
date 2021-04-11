@@ -15,6 +15,7 @@ router.get("/list", async function(req, res, next) {
     let city = req.query.city;
     let page = req.query.page;
     let size = req.query.size;
+    let zone = req.query.zone;
     let order = req.query.order;
     let model;
     switch (city) {
@@ -35,7 +36,19 @@ router.get("/list", async function(req, res, next) {
             city = "广州";
             break;
     }
-    let data = await model.find({ city: city })
+    let filter = {};
+    if(zone){
+        filter.dist = zone;
+    }
+    let data=[];
+    if(city){
+        data = await model.find(filter)
+    }else{
+        data.push(...await shenzhen.find(filter))
+        data.push(...await guangzhou.find(filter))
+        data.push(...await beijing.find(filter))
+        data.push(...await shanghai.find(filter))
+    }
     let total = data.length;
     if(order){
         data = data.sort((a,b)=>{
