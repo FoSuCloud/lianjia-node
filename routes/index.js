@@ -5,11 +5,16 @@ const shenzhen = require("../models/shenzhen");
 const shanghai = require("../models/shanghai");
 const beijing = require("../models/beijing");
 const guangzhou = require("../models/guangzhou");
+const token = require('../util/jwt.js')
 
 /* GET home page. */
 router.get("/", function(req, res, next) {
     res.render("index", { title: "Express" });
 });
+// 刷新token
+router.get('/refresh', function (req,res,next){
+    res.json({code:0,data:{token:token.encrypt( {data:'123456' })}})
+})
 
 router.get("/list", async function(req, res, next) {
     let city = req.query.city;
@@ -276,7 +281,6 @@ router.get('/city/style-price', async function(req,res,next){
     });
     res.json({ code: 0, data: distList, msg: "成功" });
 })
-
 
 router.get('/city/word-cloud',async function(req,res,next){
     let city = req.query.city;
