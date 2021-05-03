@@ -3,10 +3,6 @@ var router = express.Router();
 const user = require("../models/user");
 const pagination = require("mongoose-sex-page");
 const token = require('../util/jwt.js')
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-    res.send('users 根节点');
-});
 
 router.get('/add', async function(req, res, next) {
     let username = req.query.username;

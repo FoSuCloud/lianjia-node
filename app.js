@@ -3,13 +3,12 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-// const expressJwt = require('express-jwt')
 
 var indexRouter = require('./routes/index');
+var cityRouter = require('./routes/city');
 var usersRouter = require('./routes/users');
-var shenzhenRouter = require('./routes/shenzhen');
-const token = require("./util/jwt");
 
+const token = require("./util/jwt");
 
 var app = express();
 // 解決跨域问题
@@ -52,7 +51,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/user', usersRouter);
-app.use('/shenzhen', shenzhenRouter);
+app.use('/city', cityRouter);
 
 
 // catch 404 and forward to error handler
